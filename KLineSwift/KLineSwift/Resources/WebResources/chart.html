@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="lightweight-charts.standalone.production.js"></script>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        body { 
+            background: #0d1421; 
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        #chart { 
+            width: 100vw; 
+            height: 100vh; 
+        }
+    </style>
+</head>
+<body>
+    <div id="chart"></div>
+    <script>
+        // 创建图表
+        const chart = LightweightCharts.createChart(document.getElementById('chart'), {
+            width: window.innerWidth,
+            height: window.innerHeight,
+            layout: {
+                backgroundColor: '#0d1421',
+                textColor: '#ffffff',
+            },
+            grid: {
+                vertLines: {
+                    color: '#2B2B43',
+                },
+                horzLines: {
+                    color: '#2B2B43',
+                },
+            },
+            crosshair: {
+                mode: LightweightCharts.CrosshairMode.Normal,
+            },
+            rightPriceScale: {
+                borderColor: '#485c7b',
+            },
+            timeScale: {
+                borderColor: '#485c7b',
+                timeVisible: true,
+                secondsVisible: false,
+            },
+        });
+
+        // 创建K线图序列
+        const candlestickSeries = chart.addCandlestickSeries({
+            upColor: '#4bffb5',
+            downColor: '#ff4976',
+            borderDownColor: '#ff4976',
+            borderUpColor: '#4bffb5',
+            wickDownColor: '#ff4976',
+            wickUpColor: '#4bffb5',
+        });
+
+        // 用于接收Swift传入的数据
+        window.updateChartData = function(data) {
+            try {
+                console.log('Received chart data:', data);
+                const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
+                candlestickSeries.setData(parsedData);
+                chart.timeScale().fitContent();
+            } catch (error) {
+                console.error('Error updating chart data:', error);
+            }
+        };
+
+        // 响应窗口大小变化
+        window.addEventListener('resize', () => {
+            chart.applyOptions({
+                width: window.innerWidth,
+                height: window.innerHeight,
+            });
+        });
+
+        // 通知Swift图表已准备就绪
+        window.webkit.messageHandlers.chartReady?.postMessage('ready');
+        
+        console.log('Chart initialized');
+    </script>
+</body>
+</html>
